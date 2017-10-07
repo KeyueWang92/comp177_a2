@@ -1,7 +1,9 @@
 class Parser{
-  public HashMap<Integer, Integer> mass_map;
-  public HashMap<int[], Integer> edge_map;
+  public HashMap<Integer, Integer> mass_map; //id - mass
+  public HashMap<int[], Integer> edge_map; //[id, id] - string
+  public int maxid;
   public Parser(String filename){
+    maxid = 0;
     mass_map = new HashMap<Integer, Integer>();
     edge_map = new HashMap<int[], Integer>();
     String[] lines;
@@ -11,6 +13,8 @@ class Parser{
     int iterate = 1;
     for (int i = 0; i < count1; i++) {
       String[] data = split(lines[iterate], ",");
+      if (maxid < int(data[0])) maxid = int(data[0]);
+      if (maxid < int(data[1])) maxid = int(data[1]);
       mass_map.put(int(data[0]), int(data[1]));
       iterate++;
     }

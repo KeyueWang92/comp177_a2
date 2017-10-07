@@ -1,26 +1,35 @@
+import java.util.Random;
+
 class Node {
   private int id, mass;
   private float x_pos, y_pos, x_force, y_force, x_a, y_a, x_v, y_v, diameter;
   private ArrayList<Node> neighbors;
   boolean isHighlight;
   public Node(int id, int mass){
+    Random rand = new Random();
+    
     this.id = id;
     this.mass = mass;
     this.neighbors = new ArrayList<Node>();
     this.x_v = 0;
     this.y_v = 0;
     this.isHighlight = false;
-    this.diameter = mass;
+    this.diameter = mass*20;  // should be updated later
+    this.x_pos = rand.nextInt(int(width-diameter))+diameter/2; //randomly choose a position
+    this.y_pos = rand.nextInt(int(height-diameter))+diameter/2;
   }
   
   public void calc_node(){
   }
   
   public void draw_node(){
-    if (isHighlight) {
+    if (!isHighlight) {
+      fill(#ababab);
+      ellipse(x_pos, y_pos, diameter, diameter);
     }
     else {
-      
+      fill(#f4e32f);
+      ellipse(x_pos, y_pos, diameter, diameter);
     }
   }
   
@@ -83,5 +92,21 @@ class Node {
   }
   
   public void add_singel_node(int id, int mass){
+  }
+  
+  public void set_x_pos(float xor){
+    x_pos = xor;
+  }
+  
+  public void set_y_pos(float yor){
+    y_pos = yor;
+  }
+  
+  public void set_x_v(float xv){
+    x_v = xv;
+  }
+  
+  public void set_y_v(float yv){
+    y_v = yv;
   }
 }
