@@ -30,8 +30,9 @@ void setup(){
 }
 
 void draw(){
-  //fff/f/f/f/
+  fill(120);
   rect(0,0,width,height);
+  boolean hl_check = false; // hightlight check
   for (int i = 0; i < lines.size(); i++) {
     lines.get(i).draw_line();
     int firstId = lines.get(i).get_firstId();
@@ -42,7 +43,13 @@ void draw(){
   }
   for (int i = 0; i < nodes.size(); i++) {
     if (nodes.get(i) != null) {
-      nodes.get(i).draw_node();
+      if(!hl_check) {
+        hl_check = on_this_node(nodes.get(i));
+        nodes.get(i).draw_node(hl_check);
+      }
+      else {
+        nodes.get(i).draw_node(false);
+      }
       calc_node(nodes.get(i));
     }
   }
@@ -94,4 +101,14 @@ public void calc_node(Node node){
   
   node.set_x_pos(pos_x);
   node.set_y_pos(pos_y);
+}
+
+public boolean on_this_node(Node node) {
+    if(mouseX > node.x_pos-node.diameter/2 && mouseX < node.x_pos+node.diameter/2 &&
+        mouseY > node.y_pos-node.diameter/2 && mouseY < node.y_pos+node.diameter/2) {
+      return true;
+        }
+    else {
+      return false;
+    }
 }
