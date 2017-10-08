@@ -5,7 +5,7 @@ float k1, k2;
 float t;
 void setup(){
   size(600,600);
-  frameRate(1);
+  frameRate(12);
   k1 = 3;
   k2 = 3;
   t = 1;
@@ -30,6 +30,7 @@ void setup(){
 }
 
 void draw(){
+  //fff/f/f/f/
   rect(0,0,width,height);
   for (int i = 0; i < lines.size(); i++) {
     lines.get(i).draw_line();
