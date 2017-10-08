@@ -12,6 +12,7 @@ void setup(){
   t = 0.1;
   KE = 0;
   p = new Parser("data2.csv");
+
   // init nodes
   nodes = new ArrayList<Node>();
   for (int i = 0; i < p.maxid+1; i++) nodes.add(i,null);
@@ -32,8 +33,9 @@ void setup(){
 
 void draw(){
   KE = 0;
-  
+  fill(120);
   rect(0,0,width,height);
+  boolean hl_check = false; // hightlight check
   for (int i = 0; i < lines.size(); i++) {
     lines.get(i).draw_line();
     int firstId = lines.get(i).get_firstId();
@@ -44,7 +46,13 @@ void draw(){
   }
   for (int i = 0; i < nodes.size(); i++) {
     if (nodes.get(i) != null) {
-      nodes.get(i).draw_node();
+      if(!hl_check) {
+        hl_check = on_this_node(nodes.get(i));
+        nodes.get(i).draw_node(hl_check);
+      }
+      else {
+        nodes.get(i).draw_node(false);
+      }
       calc_node(nodes.get(i));
       KE += nodes.get(i).getMass()*0.5*(Math.pow(nodes.get(i).get_X_v(),2) + Math.pow(nodes.get(i).get_Y_v(),2));
     }
@@ -102,4 +110,14 @@ public void calc_node(Node node){
   
   node.set_x_pos(pos_x);
   node.set_y_pos(pos_y);
+}
+
+public boolean on_this_node(Node node) {
+    if(mouseX > node.x_pos-node.diameter/2 && mouseX < node.x_pos+node.diameter/2 &&
+        mouseY > node.y_pos-node.diameter/2 && mouseY < node.y_pos+node.diameter/2) {
+      return true;
+        }
+    else {
+      return false;
+    }
 }
