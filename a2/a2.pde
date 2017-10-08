@@ -4,13 +4,16 @@ ArrayList<Line> lines;
 float k1, k2;
 float t;
 double KE;
+int mouse_on;
+
 void setup(){
   size(1000,700);
-  frameRate(10);
+  frameRate(100);
   k1 = 10;
   k2 = 10;
-  t = 0.1;
+  t = 0.01;
   KE = 0;
+  mouse_on = -1;
   p = new Parser("data2.csv");
 
   // init nodes
@@ -48,6 +51,7 @@ void draw(){
     if (nodes.get(i) != null) {
       if(!hl_check) {
         hl_check = on_this_node(nodes.get(i));
+        mouse_on = i;
         nodes.get(i).draw_node(hl_check);
       }
       else {
@@ -57,7 +61,7 @@ void draw(){
       KE += nodes.get(i).getMass()*0.5*(Math.pow(nodes.get(i).get_X_v(),2) + Math.pow(nodes.get(i).get_Y_v(),2));
     }
   }
-  println(KE);
+  if(!hl_check) mouse_on = -1;
 }
 
 public void calc_node(Node node){
@@ -120,4 +124,12 @@ public boolean on_this_node(Node node) {
     else {
       return false;
     }
+}
+
+void mouseDragged() 
+{
+  if(mouse_on != -1) {
+    nodes.get(mouse_on).set_x_pos(mouseX);
+    nodes.get(mouse_on).set_y_pos(mouseY);
+  }
 }

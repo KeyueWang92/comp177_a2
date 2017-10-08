@@ -13,7 +13,6 @@ class Node {
     this.x_v = 0;
     this.y_v = 0;
 
-    this.isHighlight = false;
     this.diameter = (float)Math.sqrt(mass*100);  // should be updated later
 
     this.x_pos = rand.nextInt(int(width-diameter))+diameter/2; //randomly choose a position
