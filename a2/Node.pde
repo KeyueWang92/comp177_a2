@@ -3,13 +3,13 @@ import java.util.Random;
 class Node {
   private int id, mass;
   private float x_pos, y_pos, x_force, y_force, x_a, y_a, x_v, y_v, diameter;
-  private ArrayList<Node> neighbors;
+  private ArrayList<Integer> neighbors; //neighbor's id
   public Node(int id, int mass){
     Random rand = new Random();
     
     this.id = id;
     this.mass = mass;
-    this.neighbors = new ArrayList<Node>();
+    this.neighbors = new ArrayList<Integer>();
     this.x_v = 0;
     this.y_v = 0;
 
@@ -73,10 +73,13 @@ class Node {
     return y_v;
   }
   
-  public ArrayList<Node> get_neighbors(){
+  public ArrayList<Integer> get_neighbors(){
     return neighbors;
   }
   
+  public void add_neighbor(int id){
+    neighbors.add(id);
+  }
   public void delete_node(int id){
   }
   

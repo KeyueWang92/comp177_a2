@@ -14,6 +14,17 @@ void setup(){
   t = 0.01;
   KE = 0;
   mouse_on = -1;
+  float damping;
+  }
+  
+void setup(){
+  size(1000,700);
+  frameRate(100);
+  k1 = 1;
+  k2 = 1;
+  t = 0.01;
+  KE = 0;
+  damping = 0.99;
   p = new Parser("data2.csv");
 
   // init nodes
@@ -30,8 +41,15 @@ void setup(){
     Line line = new Line(ids[0], ids[1], entry.getValue(), 
                   nodes.get(ids[0]).get_Xpos(), nodes.get(ids[0]).get_Ypos(),
                   nodes.get(ids[1]).get_Xpos(), nodes.get(ids[1]).get_Ypos());
+    nodes.get(ids[0]).add_neighbor(ids[1]);
+    println(p.edge_map.get(ids));
+    println(ids);
     lines.add(line);
   }
+  //int[] ids = new int[2];
+  //ids[0] = 1;
+  //ids[1] = 17;
+  //println(p.edge_map.get(ids));
 }
 
 void draw(){
@@ -47,7 +65,7 @@ void draw(){
     Node secondNode = nodes.get(secondId);
     lines.get(i).set_pos(firstNode.get_Xpos(), firstNode.get_Ypos(), secondNode.get_Xpos(), secondNode.get_Ypos());
   }
-  for (int i = 0; i < nodes.size(); i++) {
+  for (int i = nodes.size()-1; i >=0 ; i--) {
     if (nodes.get(i) != null) {
       if(!hl_check) {
         hl_check = on_this_node(nodes.get(i));
@@ -61,28 +79,34 @@ void draw(){
       KE += nodes.get(i).getMass()*0.5*(Math.pow(nodes.get(i).get_X_v(),2) + Math.pow(nodes.get(i).get_Y_v(),2));
     }
   }
+
   if(!hl_check) mouse_on = -1;
+
+  //println(KE);
+
 }
 
 public void calc_node(Node node){
+  
   //calculate the Coulomb's force from each node, f = k/distance
   float cforce_x = 0, cforce_y = 0;
   for (int i = 0; i < nodes.size(); i++) {
     if (nodes.get(i) != null && i != node.getId()) {
       Node n = nodes.get(i);
-      cforce_x = cforce_x - k2/(n.get_Xpos()-node.get_Xpos());
-      cforce_y = cforce_y - k2/(n.get_Ypos()-node.get_Ypos());
+      cforce_x = (float) (cforce_x - k2/(n.get_Xpos()-node.get_Xpos()));
+      cforce_y = (float) (cforce_y - k2/(n.get_Ypos()-node.get_Ypos()));
     }   
   } 
   //calculate the force from springs, f = k * distance; 
   double sforce_x = 0, sforce_y = 0;
-  ArrayList<Node> neighbors = node.get_neighbors();
+  ArrayList<Integer> neighbors = node.get_neighbors();
   for (int i = 0; i < neighbors.size(); i++) {
-    Node neighbor = neighbors.get(i);
+    Node neighbor = nodes.get(neighbors.get(i));
     int[] ids = new int[2];
     ids[0] = node.getId();
-    ids[1] = neighbor.getId();
-    double default_springl = p.edge_map.get(ids);
+    ids[1] = neighbors.get(i);
+    double default_springl = 100;
+    //double default_springl = p.edge_map.get(ids);
     double springl = Math.sqrt(Math.pow(neighbor.get_Xpos() - node.get_Xpos(), 2) + 
                       Math.pow(neighbor.get_Ypos() - node.get_Ypos(), 2)) - default_springl;
     double sforce = springl * k1;
@@ -101,11 +125,11 @@ public void calc_node(Node node){
   //calculate a
   float a_x = force_x/node.getMass();
   float a_y = force_y/node.getMass();
-  println(a_x);
-  println(a_y);
+  //println(a_x);
+  //println(a_y);
   //calculate v
-  float v_x = a_x * t + node.get_X_v();
-  float v_y = a_y * t + node.get_Y_v();
+  float v_x = (a_x * t + node.get_X_v()) * damping;
+  float v_y = (a_y * t + node.get_Y_v()) * damping;
   //calculate position
   float pos_x = node.get_Xpos() + 0.5 * a_x * t*t + node.get_X_v() * t;
   node.set_x_v(v_x);
@@ -114,6 +138,7 @@ public void calc_node(Node node){
   
   node.set_x_pos(pos_x);
   node.set_y_pos(pos_y);
+  if (damping >0 ) damping = damping - 0.0000000001;
 }
 
 public boolean on_this_node(Node node) {
