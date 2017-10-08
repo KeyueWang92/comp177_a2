@@ -4,7 +4,6 @@ class Node {
   private int id, mass;
   private float x_pos, y_pos, x_force, y_force, x_a, y_a, x_v, y_v, diameter;
   private ArrayList<Node> neighbors;
-  boolean isHighlight;
   public Node(int id, int mass){
     Random rand = new Random();
     
@@ -13,15 +12,15 @@ class Node {
     this.neighbors = new ArrayList<Node>();
     this.x_v = 0;
     this.y_v = 0;
+
     this.isHighlight = false;
-    this.diameter = mass*20;  // should be updated later
+    this.diameter = (float)Math.sqrt(mass*100);  // should be updated later
+
     this.x_pos = rand.nextInt(int(width-diameter))+diameter/2; //randomly choose a position
     this.y_pos = rand.nextInt(int(height-diameter))+diameter/2;
   }
   
-
-  
-  public void draw_node(){
+  public void draw_node(boolean isHighlight){
     if (!isHighlight) {
       fill(#ababab);
       ellipse(x_pos, y_pos, diameter, diameter);
@@ -30,14 +29,6 @@ class Node {
       fill(#f4e32f);
       ellipse(x_pos, y_pos, diameter, diameter);
     }
-  }
-  
-  public void highlightNode(){
-    isHighlight = true;
-  }
-  
-  public void un_highlightNode(){
-    isHighlight = false;
   }
   
   public void drag_node(){
