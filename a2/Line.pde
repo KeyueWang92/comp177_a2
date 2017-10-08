@@ -28,4 +28,12 @@ class Line{
   
   public void add_line(int id1, int id2){
   }
+  
+  public int get_firstId(){
+    return firstId;
+  }
+  
+  public int get_secondId(){
+    return secondId;
+  }
 }
