@@ -2,11 +2,12 @@ Parser p;
 ArrayList<Node> nodes;
 ArrayList<Line> lines;
 float k1, k2;
-
+float t;
 void setup(){
   size(600,600);
   k1 = 1;
   k2 = 1;
+  t = frameRate;
   p = new Parser("data2.csv");
   // init nodes
   nodes = new ArrayList<Node>();
@@ -69,8 +70,16 @@ public void calc_node(Node node){
   float force_x = cforce_x + sforce_x;
   float force_y = cforce_y = sforce_y;
   //calculate a
-  
+  float a_x = force_x/node.getMass();
+  float a_y = force_y/node.getMass();
   //calculate v
-  
+  float v_x = a_x * t + node.get_X_v();
+  float v_y = a_y * t + node.get_X_y();
   //calculate position
+  float pos_x = node.get_Xpos() + 0.5 * a_x * t*t + node.get_X_v() * t;
+  node.set_x_v(v_x);
+  float pos_y = node.get_Ypos() + 0.5 * a_y * t*t + node.get_Y_v() * t;
+  node.set_y_v(v_y);
+  node.set_x_pos(pos_x);
+  node.set_y_pos(pos_y);
 }
