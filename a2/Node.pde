@@ -19,8 +19,7 @@ class Node {
     this.y_pos = rand.nextInt(int(height-diameter))+diameter/2;
   }
   
-  public void calc_node(){
-  }
+
   
   public void draw_node(){
     if (!isHighlight) {
