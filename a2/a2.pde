@@ -74,7 +74,7 @@ public void calc_node(Node node){
   float a_y = force_y/node.getMass();
   //calculate v
   float v_x = a_x * t + node.get_X_v();
-  float v_y = a_y * t + node.get_X_y();
+  float v_y = a_y * t + node.get_Y_v();
   //calculate position
   float pos_x = node.get_Xpos() + 0.5 * a_x * t*t + node.get_X_v() * t;
   node.set_x_v(v_x);
