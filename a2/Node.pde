@@ -14,12 +14,10 @@ class Node {
     this.x_v = 0;
     this.y_v = 0;
     this.isHighlight = false;
-    this.diameter = mass*20;  // should be updated later
+    this.diameter = (float)Math.sqrt(mass*100);  // should be updated later
     this.x_pos = rand.nextInt(int(width-diameter))+diameter/2; //randomly choose a position
     this.y_pos = rand.nextInt(int(height-diameter))+diameter/2;
   }
-  
-
   
   public void draw_node(){
     if (!isHighlight) {
