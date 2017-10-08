@@ -1,6 +1,6 @@
 class Parser{
   public HashMap<Integer, Integer> mass_map; //id - mass
-  public HashMap<int[], Integer> edge_map; //[id, id] - string
+  public HashMap<int[], Integer> edge_map; //[id, id] - spring
   public int maxid;
   public Parser(String filename){
     maxid = 0;
