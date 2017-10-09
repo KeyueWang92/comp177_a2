@@ -5,26 +5,17 @@ float k1, k2;
 float t;
 double KE;
 int mouse_on;
-
-void setup(){
-  size(1000,700);
-  frameRate(100);
-  k1 = 10;
-  k2 = 10;
-  t = 0.01;
-  KE = 0;
-  mouse_on = -1;
-  float damping;
-  }
+float damping;
   
 void setup(){
   size(1000,700);
   frameRate(100);
   k1 = 1;
-  k2 = 1;
+  k2 = 50;
   t = 0.01;
   KE = 0;
   damping = 0.99;
+  mouse_on = -1;
   p = new Parser("data2.csv");
 
   // init nodes
@@ -36,15 +27,25 @@ void setup(){
   }
   // init lines
   lines = new ArrayList<Line>();
-  for (HashMap.Entry<int[], Integer> entry : p.edge_map.entrySet()) {
-    int[] ids = entry.getKey();
-    Line line = new Line(ids[0], ids[1], entry.getValue(), 
-                  nodes.get(ids[0]).get_Xpos(), nodes.get(ids[0]).get_Ypos(),
-                  nodes.get(ids[1]).get_Xpos(), nodes.get(ids[1]).get_Ypos());
-    nodes.get(ids[0]).add_neighbor(ids[1]);
-    println(p.edge_map.get(ids));
-    println(ids);
-    lines.add(line);
+  //for (HashMap.Entry<int[], Integer> entry : p.edge_map.entrySet()) {
+  //  int[] ids = entry.getKey();
+  //  Line line = new Line(ids[0], ids[1], entry.getValue(), 
+  //                nodes.get(ids[0]).get_Xpos(), nodes.get(ids[0]).get_Ypos(),
+  //                nodes.get(ids[1]).get_Xpos(), nodes.get(ids[1]).get_Ypos());
+  //  nodes.get(ids[0]).add_neighbor(ids[1]);
+  //  println(p.edge_map.get(ids));
+  //  println(ids);
+  //  lines.add(line);
+  //}
+  for (int i = 0; i < p.maxid+1; i++) {
+    for (int j = 0; j < p.maxid+1; j++) {
+       if (p.edge_map[i][j] != 0) {
+         Line line = new Line(i, j, p.edge_map[i][j], nodes.get(i).get_Xpos(), 
+                         nodes.get(i).get_Xpos(), nodes.get(j).get_Xpos(), nodes.get(j).get_Ypos());
+         nodes.get(i).add_neighbor(j);
+         lines.add(line);
+       }
+    }
   }
   //int[] ids = new int[2];
   //ids[0] = 1;
@@ -81,9 +82,7 @@ void draw(){
   }
 
   if(!hl_check) mouse_on = -1;
-
   //println(KE);
-
 }
 
 public void calc_node(Node node){
@@ -102,11 +101,8 @@ public void calc_node(Node node){
   ArrayList<Integer> neighbors = node.get_neighbors();
   for (int i = 0; i < neighbors.size(); i++) {
     Node neighbor = nodes.get(neighbors.get(i));
-    int[] ids = new int[2];
-    ids[0] = node.getId();
-    ids[1] = neighbors.get(i);
-    double default_springl = 100;
-    //double default_springl = p.edge_map.get(ids);
+    //double default_springl = 100;
+    double default_springl = p.edge_map[node.getId()][neighbors.get(i)];
     double springl = Math.sqrt(Math.pow(neighbor.get_Xpos() - node.get_Xpos(), 2) + 
                       Math.pow(neighbor.get_Ypos() - node.get_Ypos(), 2)) - default_springl;
     double sforce = springl * k1;
@@ -125,8 +121,6 @@ public void calc_node(Node node){
   //calculate a
   float a_x = force_x/node.getMass();
   float a_y = force_y/node.getMass();
-  //println(a_x);
-  //println(a_y);
   //calculate v
   float v_x = (a_x * t + node.get_X_v()) * damping;
   float v_y = (a_y * t + node.get_Y_v()) * damping;
