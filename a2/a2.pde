@@ -15,7 +15,6 @@ void setup(){
   k1 = 10;
   k2 = 1;
   t = 0.01;
-  KE = 0;
   damping = 0.99;
   mouse_on = -1;
   p = new Parser("data2.csv");
@@ -43,7 +42,7 @@ void setup(){
 
 void draw(){
   KE = 0;
-  fill(120);
+  fill(50);
   rect(0,0,width,height);
   refresh.buttondraw();
   boolean hl_check = false; // hightlight check
@@ -55,8 +54,8 @@ void draw(){
     Node secondNode = nodes.get(secondId);
     lines.get(i).set_pos(firstNode.get_Xpos(), firstNode.get_Ypos(), secondNode.get_Xpos(), secondNode.get_Ypos());
   }
-  //for (int i = nodes.size()-1; i >=0 ; i--) {
-  for (int i = 0; i < nodes.size(); i++){
+  for (int i = nodes.size()-1; i >= 0; i--){
+    if(!hl_check) mouse_on = -1;
     if (nodes.get(i) != null) {
       if(!hl_check) {
         hl_check = on_this_node(nodes.get(i));
@@ -67,14 +66,17 @@ void draw(){
       else {
         nodes.get(i).draw_node(false);
       }
-      // when total Energy is greater than the threshold, update nodes' position
-      calc_node(nodes.get(i));
-      KE += nodes.get(i).getMass()*0.5*(Math.pow(nodes.get(i).get_X_v(),2) + Math.pow(nodes.get(i).get_Y_v(),2));
     }
   }
-  if(!hl_check) mouse_on = -1;
-  //println(KE);
-  if (KE < 5) noLoop();
+  do {
+    for (int i = 0; i < nodes.size(); i++){
+      if (nodes.get(i) != null) {
+      // when total Energy is greater than the threshold, update nodes' position
+          calc_node(nodes.get(i));
+          KE += nodes.get(i).getMass()*0.5*(Math.pow(nodes.get(i).get_X_v(),2) + Math.pow(nodes.get(i).get_Y_v(),2));
+      }
+    }
+  } while (KE >= 5);
 }
 
 public void calc_node(Node node){
@@ -162,7 +164,6 @@ public boolean on_this_node(Node node) {
 
 void mouseDragged() 
 {
-  loop();
   if(mouse_on != -1) {
     nodes.get(mouse_on).set_x_pos(mouseX);
     nodes.get(mouse_on).set_y_pos(mouseY);
@@ -172,7 +173,6 @@ void mouseDragged()
 
 void mouseClicked(){
   if (mouseX > refresh.x && mouseX < (refresh.x + refresh.wid) && mouseY > refresh.y && mouseY < (refresh.y + refresh.hgt)) {
-    loop();
     Random rand = new Random();
     for (int i = 0; i < nodes.size(); i++) {
       if (nodes.get(i) != null) {

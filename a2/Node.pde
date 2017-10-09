@@ -17,8 +17,6 @@ class Node {
 
     this.x_pos = rand.nextInt(int(width/2))+width/4; //randomly choose a position
     this.y_pos = rand.nextInt(int(height/2))+height/4;
-    println(x_pos);
-    println(y_pos);
   }
   
   public void draw_node(boolean isHighlight){
