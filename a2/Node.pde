@@ -104,4 +104,12 @@ class Node {
   public void set_y_v(float yv){
     y_v = yv;
   }
+  
+  public void set_Mass(int m){
+    mass = m;
+  }
+  
+  public void set_diameter(float d) {
+    diameter = d;
+  }
 }

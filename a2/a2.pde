@@ -7,7 +7,9 @@ double KE;
 int mouse_on;
 float damping;
 Button refresh;
-Boolean first_draw;
+boolean first_draw;
+boolean increaseMass;
+
 
 void setup(){
   surface.setResizable(true);
@@ -20,6 +22,7 @@ void setup(){
   mouse_on = -1;
   KE = 0;
   first_draw = true;
+  increaseMass = true;
   p = new Parser("data2.csv");
   refresh = new Button("refresh");
   // init nodes
@@ -88,8 +91,8 @@ void draw(){
           KE += nodes.get(i).getMass()*0.5*(Math.pow(nodes.get(i).get_X_v(),2) + Math.pow(nodes.get(i).get_Y_v(),2));
       }
     } 
+    println(KE);
   }
-  println(KE);
 }
 
 public void calc_node(Node node){
@@ -163,7 +166,7 @@ public void calc_node(Node node){
   node.set_y_pos(pos_y);
   
   //update the damping ratio
-  if (damping >0 ) damping = damping - 0.0000001;
+  if (damping >0 ) damping = damping - 0.00000001;
 }
 
 public boolean on_this_node(Node node) {
@@ -178,12 +181,15 @@ public boolean on_this_node(Node node) {
 
 void mouseDragged() 
 {
-  if(mouse_on != -1) {
-    nodes.get(mouse_on).set_x_pos(mouseX);
-    nodes.get(mouse_on).set_y_pos(mouseY);
+  if(mouse_on != -1 && mouseButton == RIGHT) {
+    Node node = nodes.get(mouse_on);
+    node.set_x_pos(mouseX);
+    node.set_y_pos(mouseY);
+    //node.set_Mass(node.getMass()-1);
     damping = 0.99;
     first_draw = true;
   }
+
 }
 
 void mouseClicked(){
@@ -213,9 +219,38 @@ void mouseClicked(){
   }
   
   //delete_node feature
-  if (mouse_on != -1) {
+  if (mouseButton == RIGHT && mouse_on != -1) {
     delete_node(mouse_on);
   }
+  
+  //add_node feature
+  if (mouseButton == RIGHT && mouse_on == -1 && !(mouseX > refresh.x && mouseX < (refresh.x + refresh.wid) && mouseY > refresh.y && mouseY < (refresh.y + refresh.hgt))) {
+    add_node();
+  }
+  
+  //change_mass feature
+  if (mouse_on != -1 && mouseButton == LEFT) {
+    Node node = nodes.get(mouse_on);
+    //detect to increase mass or decrease
+    if (node.getMass() == 10) {
+      increaseMass = false;
+    }
+    if (node.getMass() == 1) {
+      increaseMass = true;
+    }
+    //set mass
+    if (increaseMass == true) {
+      node.set_Mass(node.getMass()+1);
+      println("increase");
+    } else {node.set_Mass(node.getMass()-1);
+    println("decrease");
+    }
+    node.set_diameter((float)Math.sqrt(node.getMass()*200));
+  }
+}
+
+void mousePressed(){
+
 }
 
 void delete_node(int id) {
@@ -230,4 +265,12 @@ void delete_node(int id) {
       }
     }
   }
+}
+
+void add_node() {
+  int id = nodes.size();
+  Node node = new Node(id, 1);
+  node.set_x_pos(mouseX);
+  node.set_y_pos(mouseY);
+  nodes.add(id, node);
 }
