@@ -23,17 +23,15 @@ class Line{
     this.end_y = end_y;
   }
   
-  public void delete_line(int id){
-  }
-  
-  public void add_line(int id1, int id2){
-  }
-  
   public int get_firstId(){
     return firstId;
   }
   
   public int get_secondId(){
     return secondId;
+  }
+  
+  public int get_spring(){
+    return spring;
   }
 }

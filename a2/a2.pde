@@ -12,13 +12,12 @@ boolean first_draw;
 boolean increaseMass;
 boolean select_node;
 int[] add_line_ids;
-
 void setup(){
   surface.setResizable(true);
   size(600,400);
   frameRate(100);
-  k1 = 10;
-  k2 = 10;
+  k1 = 8;
+  k2 = 3;
   t = 0.01;
   damping = 0.99;
   mouse_on = -1;
@@ -40,8 +39,8 @@ void setup(){
   lines = new ArrayList<Line>();
   for (int i = 0; i < p.maxid+1; i++) {
     for (int j = 0; j < p.maxid+1; j++) {
-       if (p.edge_map.get(i).get(j) != 0) {
-         Line line = new Line(i, j, p.edge_map.get(i).get(j), nodes.get(i).get_Xpos(), 
+       if (p.edge_map[i][j] != 0) {
+         Line line = new Line(i, j, p.edge_map[i][j], nodes.get(i).get_Xpos(), 
                          nodes.get(i).get_Xpos(), nodes.get(j).get_Xpos(), nodes.get(j).get_Ypos());
          nodes.get(i).add_neighbor(j);
          lines.add(line);
@@ -116,7 +115,10 @@ public void calc_node(Node node){
   for (int i = 0; i < neighbors.size(); i++) {
     Node neighbor = nodes.get(neighbors.get(i));
     if (neighbor != null) {
-      double default_springl = p.edge_map.get(node.getId()).get(neighbors.get(i));
+      double default_springl;
+      if (node.getId() < p.edge_map.length && neighbors.get(i) < p.edge_map[node.getId()].length)
+        default_springl = p.edge_map[node.getId()][neighbors.get(i)];
+      else default_springl = 100;
       double springl = Math.sqrt(Math.pow(neighbor.get_Xpos() - node.get_Xpos(), 2) + 
                       Math.pow(neighbor.get_Ypos() - node.get_Ypos(), 2)) - default_springl;
       double sforce = springl * k1;
@@ -169,9 +171,6 @@ public void calc_node(Node node){
   }
   node.set_x_pos(pos_x);
   node.set_y_pos(pos_y);
-  
-  //update the damping ratio
-  if (damping >0 ) damping = damping - 0.00000001;
 }
 
 public boolean on_this_node(Node node) {
@@ -214,8 +213,8 @@ void mouseClicked(){
     lines = new ArrayList<Line>();
     for (int i = 0; i < p.maxid+1; i++) {
       for (int j = 0; j < p.maxid+1; j++) {
-         if (p.edge_map.get(i).get(j) != 0) {
-           Line line = new Line(i, j, p.edge_map.get(i).get(j), nodes.get(i).get_Xpos(), 
+         if (p.edge_map[i][j] != 0) {
+           Line line = new Line(i, j, p.edge_map[i][j], nodes.get(i).get_Xpos(), 
                          nodes.get(i).get_Xpos(), nodes.get(j).get_Xpos(), nodes.get(j).get_Ypos());
            nodes.get(i).add_neighbor(j);
            lines.add(line);
@@ -249,10 +248,7 @@ void mouseClicked(){
     //set mass
     if (increaseMass == true) {
       node.set_Mass(node.getMass()+1);
-      println("increase");
-    } else {node.set_Mass(node.getMass()-1);
-    println("decrease");
-    }
+    } else node.set_Mass(node.getMass()-1);
     node.set_diameter((float)Math.sqrt(node.getMass()*200));
   }
   
@@ -262,13 +258,7 @@ void mouseClicked(){
       select_node = true;
       addline.label = "Adding";
   }
-  /*else if (mouseX > addline.x && mouseX < (addline.x + addline.wid) && mouseY > addline.y && mouseY < (addline.y + addline.hgt)
-        && addline.label == "Adding") {
-      select_node = false;
-      add_line_ids[0] = 0;
-      add_line_ids[1] = 0;
-  }
-  */
+
   if (mouse_on != -1 && mouseButton == LEFT && select_node == true) {
     if (add_line_ids[0] == 0) add_line_ids[0] = mouse_on;
     else add_line_ids[1] = mouse_on;
@@ -279,10 +269,14 @@ void mouseClicked(){
       lines.add(lines.size(), newline);
       nodes.get(add_line_ids[0]).add_neighbor(add_line_ids[1]);
       nodes.get(add_line_ids[1]).add_neighbor(add_line_ids[0]);
+      //p.edge_map.get(add_line_ids[0]).set(add_line_ids[1],100);
       addline.label = "AddLine";
       select_node = false;
+      add_line_ids[0] = 0;
+      add_line_ids[1] = 0;
     }                                 
   }
+  first_draw = true;
 }
 
 void delete_node(int id) {
