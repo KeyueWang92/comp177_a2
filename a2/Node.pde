@@ -13,7 +13,7 @@ class Node {
     this.x_v = 0;
     this.y_v = 0;
 
-    this.diameter = (float)Math.sqrt(mass*100);  // should be updated later
+    this.diameter = (float)Math.sqrt(mass*200);  // should be updated later
 
     this.x_pos = rand.nextInt(int(width-diameter))+diameter/2; //randomly choose a position
     this.y_pos = rand.nextInt(int(height-diameter))+diameter/2;
@@ -27,6 +27,8 @@ class Node {
     else {
       fill(#f4e32f);
       ellipse(x_pos, y_pos, diameter, diameter);
+      fill(255);
+      text(""+id, x_pos + diameter/2, y_pos + diameter/2);
     }
   }
   
@@ -73,6 +75,9 @@ class Node {
     return y_v;
   }
   
+  public float get_diameter(){
+    return diameter;
+  }
   public ArrayList<Integer> get_neighbors(){
     return neighbors;
   }

@@ -6,12 +6,13 @@ float t;
 double KE;
 int mouse_on;
 float damping;
-  
+
 void setup(){
-  size(1000,700);
+  surface.setResizable(true);
+  size(600,400);
   frameRate(100);
-  k1 = 1;
-  k2 = 50;
+  k1 = 5;
+  k2 = 5;
   t = 0.01;
   KE = 0;
   damping = 0.99;
@@ -27,16 +28,6 @@ void setup(){
   }
   // init lines
   lines = new ArrayList<Line>();
-  //for (HashMap.Entry<int[], Integer> entry : p.edge_map.entrySet()) {
-  //  int[] ids = entry.getKey();
-  //  Line line = new Line(ids[0], ids[1], entry.getValue(), 
-  //                nodes.get(ids[0]).get_Xpos(), nodes.get(ids[0]).get_Ypos(),
-  //                nodes.get(ids[1]).get_Xpos(), nodes.get(ids[1]).get_Ypos());
-  //  nodes.get(ids[0]).add_neighbor(ids[1]);
-  //  println(p.edge_map.get(ids));
-  //  println(ids);
-  //  lines.add(line);
-  //}
   for (int i = 0; i < p.maxid+1; i++) {
     for (int j = 0; j < p.maxid+1; j++) {
        if (p.edge_map[i][j] != 0) {
@@ -47,10 +38,6 @@ void setup(){
        }
     }
   }
-  //int[] ids = new int[2];
-  //ids[0] = 1;
-  //ids[1] = 17;
-  //println(p.edge_map.get(ids));
 }
 
 void draw(){
@@ -66,23 +53,26 @@ void draw(){
     Node secondNode = nodes.get(secondId);
     lines.get(i).set_pos(firstNode.get_Xpos(), firstNode.get_Ypos(), secondNode.get_Xpos(), secondNode.get_Ypos());
   }
-  for (int i = nodes.size()-1; i >=0 ; i--) {
+  //for (int i = nodes.size()-1; i >=0 ; i--) {
+  for (int i = 0; i < nodes.size(); i++){
     if (nodes.get(i) != null) {
       if(!hl_check) {
         hl_check = on_this_node(nodes.get(i));
-        mouse_on = i;
+        if (hl_check == true) 
+          mouse_on = i;
         nodes.get(i).draw_node(hl_check);
       }
       else {
         nodes.get(i).draw_node(false);
       }
+      // when total Energy is greater than the threshold, update nodes' position
       calc_node(nodes.get(i));
       KE += nodes.get(i).getMass()*0.5*(Math.pow(nodes.get(i).get_X_v(),2) + Math.pow(nodes.get(i).get_Y_v(),2));
     }
   }
-
   if(!hl_check) mouse_on = -1;
-  //println(KE);
+  println(KE);
+  if (KE < 5) noLoop();
 }
 
 public void calc_node(Node node){
@@ -101,7 +91,6 @@ public void calc_node(Node node){
   ArrayList<Integer> neighbors = node.get_neighbors();
   for (int i = 0; i < neighbors.size(); i++) {
     Node neighbor = nodes.get(neighbors.get(i));
-    //double default_springl = 100;
     double default_springl = p.edge_map[node.getId()][neighbors.get(i)];
     double springl = Math.sqrt(Math.pow(neighbor.get_Xpos() - node.get_Xpos(), 2) + 
                       Math.pow(neighbor.get_Ypos() - node.get_Ypos(), 2)) - default_springl;
@@ -130,9 +119,32 @@ public void calc_node(Node node){
   float pos_y = node.get_Ypos() + 0.5 * a_y * t*t + node.get_Y_v() * t;
   node.set_y_v(v_y);
   
+  //the next part is to ensure that all nodes are always in the canvas 
+  if (pos_x < node.get_diameter()) {
+    pos_x = node.get_diameter();
+    v_x = 0;
+    node.set_x_v(v_x);
+  }
+  if (pos_y < node.get_diameter()) {
+    pos_y = node.get_diameter();
+    v_y = 0;
+    node.set_y_v(v_y);
+  }
+  if (pos_x > width-node.get_diameter()) {
+    pos_x = width-node.get_diameter();
+    v_x = 0;
+    node.set_x_v(v_x);
+  }
+  if (pos_y > height - node.get_diameter()) {
+    pos_y = height-node.get_diameter();
+    v_y = 0;
+    node.set_y_v(v_y);
+  }
   node.set_x_pos(pos_x);
   node.set_y_pos(pos_y);
-  if (damping >0 ) damping = damping - 0.0000000001;
+  
+  //update the damping ratio
+  if (damping >0 ) damping = damping - 0.0000001;
 }
 
 public boolean on_this_node(Node node) {
@@ -147,8 +159,10 @@ public boolean on_this_node(Node node) {
 
 void mouseDragged() 
 {
+  loop();
   if(mouse_on != -1) {
     nodes.get(mouse_on).set_x_pos(mouseX);
     nodes.get(mouse_on).set_y_pos(mouseY);
+    damping = 0.99;
   }
 }
