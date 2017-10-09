@@ -6,19 +6,20 @@ float t;
 double KE;
 int mouse_on;
 float damping;
+Button refresh;
 
 void setup(){
   surface.setResizable(true);
   size(600,400);
   frameRate(100);
-  k1 = 5;
-  k2 = 5;
+  k1 = 10;
+  k2 = 1;
   t = 0.01;
   KE = 0;
   damping = 0.99;
   mouse_on = -1;
   p = new Parser("data2.csv");
-
+  refresh = new Button("refresh");
   // init nodes
   nodes = new ArrayList<Node>();
   for (int i = 0; i < p.maxid+1; i++) nodes.add(i,null);
@@ -44,6 +45,7 @@ void draw(){
   KE = 0;
   fill(120);
   rect(0,0,width,height);
+  refresh.buttondraw();
   boolean hl_check = false; // hightlight check
   for (int i = 0; i < lines.size(); i++) {
     lines.get(i).draw_line();
@@ -71,7 +73,7 @@ void draw(){
     }
   }
   if(!hl_check) mouse_on = -1;
-  println(KE);
+  //println(KE);
   if (KE < 5) noLoop();
 }
 
@@ -120,24 +122,25 @@ public void calc_node(Node node){
   node.set_y_v(v_y);
   
   //the next part is to ensure that all nodes are always in the canvas 
-  if (pos_x < node.get_diameter()) {
-    pos_x = node.get_diameter();
-    v_x = 0;
+  Random rand = new Random();
+  if (pos_x < node.get_diameter()/2) {
+    pos_x = node.get_diameter()+rand.nextInt(10);
+    v_x = 1;
     node.set_x_v(v_x);
   }
-  if (pos_y < node.get_diameter()) {
-    pos_y = node.get_diameter();
-    v_y = 0;
+  if (pos_y < node.get_diameter()/2) {
+    pos_y = node.get_diameter()+rand.nextInt(10);
+    v_y = 1;
     node.set_y_v(v_y);
   }
-  if (pos_x > width-node.get_diameter()) {
-    pos_x = width-node.get_diameter();
-    v_x = 0;
+  if (pos_x > width-node.get_diameter()/2) {
+    pos_x = width-node.get_diameter()-rand.nextInt(10);
+    v_x = -1;
     node.set_x_v(v_x);
   }
-  if (pos_y > height - node.get_diameter()) {
-    pos_y = height-node.get_diameter();
-    v_y = 0;
+  if (pos_y > height - node.get_diameter()/2) {
+    pos_y = height-node.get_diameter()-rand.nextInt(10);
+    v_y = -1;
     node.set_y_v(v_y);
   }
   node.set_x_pos(pos_x);
@@ -164,5 +167,19 @@ void mouseDragged()
     nodes.get(mouse_on).set_x_pos(mouseX);
     nodes.get(mouse_on).set_y_pos(mouseY);
     damping = 0.99;
+  }
+}
+
+void mouseClicked(){
+  if (mouseX > refresh.x && mouseX < (refresh.x + refresh.wid) && mouseY > refresh.y && mouseY < (refresh.y + refresh.hgt)) {
+    loop();
+    Random rand = new Random();
+    for (int i = 0; i < nodes.size(); i++) {
+      if (nodes.get(i) != null) {
+        Node node = nodes.get(i);
+        node.set_x_pos(rand.nextInt(int(width/2))+width/4);
+        node.set_y_pos(rand.nextInt(int(height/2))+height/4);
+      }
+    }
   }
 }

@@ -15,8 +15,10 @@ class Node {
 
     this.diameter = (float)Math.sqrt(mass*200);  // should be updated later
 
-    this.x_pos = rand.nextInt(int(width-diameter))+diameter/2; //randomly choose a position
-    this.y_pos = rand.nextInt(int(height-diameter))+diameter/2;
+    this.x_pos = rand.nextInt(int(width/2))+width/4; //randomly choose a position
+    this.y_pos = rand.nextInt(int(height/2))+height/4;
+    println(x_pos);
+    println(y_pos);
   }
   
   public void draw_node(boolean isHighlight){
