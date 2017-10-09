@@ -85,8 +85,6 @@ class Node {
   public void add_neighbor(int id){
     neighbors.add(id);
   }
-  public void delete_node(int id){
-  }
   
   public void add_singel_node(int id, int mass){
   }

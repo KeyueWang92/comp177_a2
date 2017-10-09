@@ -7,6 +7,7 @@ double KE;
 int mouse_on;
 float damping;
 Button refresh;
+Boolean first_draw;
 
 void setup(){
   surface.setResizable(true);
@@ -17,6 +18,8 @@ void setup(){
   t = 0.01;
   damping = 0.99;
   mouse_on = -1;
+  KE = 0;
+  first_draw = true;
   p = new Parser("data2.csv");
   refresh = new Button("refresh");
   // init nodes
@@ -41,19 +44,24 @@ void setup(){
 }
 
 void draw(){
-  KE = 0;
-  fill(50);
+  fill(100);
   rect(0,0,width,height);
   refresh.buttondraw();
   boolean hl_check = false; // hightlight check
+  
+  //draw lines
   for (int i = 0; i < lines.size(); i++) {
-    lines.get(i).draw_line();
-    int firstId = lines.get(i).get_firstId();
-    int secondId = lines.get(i).get_secondId();
-    Node firstNode = nodes.get(firstId);
-    Node secondNode = nodes.get(secondId);
-    lines.get(i).set_pos(firstNode.get_Xpos(), firstNode.get_Ypos(), secondNode.get_Xpos(), secondNode.get_Ypos());
+    if (lines.get(i) != null) {
+      lines.get(i).draw_line();
+      int firstId = lines.get(i).get_firstId();
+      int secondId = lines.get(i).get_secondId();
+      Node firstNode = nodes.get(firstId);
+      Node secondNode = nodes.get(secondId);
+      lines.get(i).set_pos(firstNode.get_Xpos(), firstNode.get_Ypos(), secondNode.get_Xpos(), secondNode.get_Ypos());
+    }
   }
+  
+  //draw nodes, and detect which node is highlighted
   for (int i = nodes.size()-1; i >= 0; i--){
     if(!hl_check) mouse_on = -1;
     if (nodes.get(i) != null) {
@@ -68,19 +76,23 @@ void draw(){
       }
     }
   }
-  do {
+
+  //update nodes' info
+  if (first_draw == true || KE > 5) {
+    KE = 0;
     for (int i = 0; i < nodes.size(); i++){
+      first_draw = false;
       if (nodes.get(i) != null) {
       // when total Energy is greater than the threshold, update nodes' position
           calc_node(nodes.get(i));
           KE += nodes.get(i).getMass()*0.5*(Math.pow(nodes.get(i).get_X_v(),2) + Math.pow(nodes.get(i).get_Y_v(),2));
       }
-    }
-  } while (KE >= 5);
+    } 
+  }
+  println(KE);
 }
 
 public void calc_node(Node node){
-  
   //calculate the Coulomb's force from each node, f = k/distance
   float cforce_x = 0, cforce_y = 0;
   for (int i = 0; i < nodes.size(); i++) {
@@ -95,19 +107,21 @@ public void calc_node(Node node){
   ArrayList<Integer> neighbors = node.get_neighbors();
   for (int i = 0; i < neighbors.size(); i++) {
     Node neighbor = nodes.get(neighbors.get(i));
-    double default_springl = p.edge_map[node.getId()][neighbors.get(i)];
-    double springl = Math.sqrt(Math.pow(neighbor.get_Xpos() - node.get_Xpos(), 2) + 
+    if (neighbor != null) {
+      double default_springl = p.edge_map[node.getId()][neighbors.get(i)];
+      double springl = Math.sqrt(Math.pow(neighbor.get_Xpos() - node.get_Xpos(), 2) + 
                       Math.pow(neighbor.get_Ypos() - node.get_Ypos(), 2)) - default_springl;
-    double sforce = springl * k1;
-    double distanceX = neighbor.get_Xpos() - node.get_Xpos();
-    double distanceY = neighbor.get_Ypos() - node.get_Ypos();
+      double sforce = springl * k1;
+      double distanceX = neighbor.get_Xpos() - node.get_Xpos();
+      double distanceY = neighbor.get_Ypos() - node.get_Ypos();
     
-    if ((distanceX > 0 && springl > 0) || (distanceX < 0) && (springl < 0)) 
-      sforce_x = sforce_x + Math.sqrt(Math.pow(distanceX, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
-    else sforce_x = sforce_x - Math.sqrt(Math.pow(distanceX, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
-    if ((distanceY > 0 && springl > 0) || (distanceY < 0) && (springl < 0)) 
-      sforce_y = sforce_y + Math.sqrt(Math.pow(distanceY, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
-    else sforce_y = sforce_y - Math.sqrt(Math.pow(distanceY, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
+      if ((distanceX > 0 && springl > 0) || (distanceX < 0) && (springl < 0)) 
+        sforce_x = sforce_x + Math.sqrt(Math.pow(distanceX, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
+      else sforce_x = sforce_x - Math.sqrt(Math.pow(distanceX, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
+      if ((distanceY > 0 && springl > 0) || (distanceY < 0) && (springl < 0)) 
+        sforce_y = sforce_y + Math.sqrt(Math.pow(distanceY, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
+      else sforce_y = sforce_y - Math.sqrt(Math.pow(distanceY, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
+    }  
   }
   float force_x = (float)(cforce_x + sforce_x);
   float force_y = (float)(cforce_y + sforce_y);
@@ -168,17 +182,51 @@ void mouseDragged()
     nodes.get(mouse_on).set_x_pos(mouseX);
     nodes.get(mouse_on).set_y_pos(mouseY);
     damping = 0.99;
+    first_draw = true;
   }
 }
 
 void mouseClicked(){
   if (mouseX > refresh.x && mouseX < (refresh.x + refresh.wid) && mouseY > refresh.y && mouseY < (refresh.y + refresh.hgt)) {
-    Random rand = new Random();
-    for (int i = 0; i < nodes.size(); i++) {
-      if (nodes.get(i) != null) {
-        Node node = nodes.get(i);
-        node.set_x_pos(rand.nextInt(int(width/2))+width/4);
-        node.set_y_pos(rand.nextInt(int(height/2))+height/4);
+    damping = 0.99;
+    first_draw = true;
+    
+    // init nodes
+    nodes = new ArrayList<Node>();
+    for (int i = 0; i < p.maxid+1; i++) nodes.add(i,null);
+    for (HashMap.Entry<Integer, Integer> entry : p.mass_map.entrySet()) { 
+      Node node = new Node(entry.getKey(), entry.getValue());
+      nodes.set(entry.getKey(), node);
+    }
+    // init lines
+    lines = new ArrayList<Line>();
+    for (int i = 0; i < p.maxid+1; i++) {
+      for (int j = 0; j < p.maxid+1; j++) {
+         if (p.edge_map[i][j] != 0) {
+           Line line = new Line(i, j, p.edge_map[i][j], nodes.get(i).get_Xpos(), 
+                         nodes.get(i).get_Xpos(), nodes.get(j).get_Xpos(), nodes.get(j).get_Ypos());
+           nodes.get(i).add_neighbor(j);
+           lines.add(line);
+         }
+      }
+    }
+  }
+  
+  //delete_node feature
+  if (mouse_on != -1) {
+    delete_node(mouse_on);
+  }
+}
+
+void delete_node(int id) {
+  nodes.set(id, null);
+  for (int i = 0; i < lines.size(); i++) {
+    Line line = lines.get(i);
+    if (line != null) {
+      int firstId = line.get_firstId();
+      int secondId = line.get_secondId();
+      if (firstId == id || secondId == id) {
+        lines.set(i, null);
       }
     }
   }

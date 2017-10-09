@@ -8,7 +8,7 @@ class Button {
     this.label = text;
   }
   public void buttondraw(){
-    fill(200,200,200);
+    fill(200,100,50);
     rect(x,y,wid,hgt);
     fill(255);
     text(label,35,50);
