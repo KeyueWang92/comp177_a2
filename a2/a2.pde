@@ -7,24 +7,28 @@ double KE;
 int mouse_on;
 float damping;
 Button refresh;
+Button addline;
 boolean first_draw;
 boolean increaseMass;
-
+boolean select_node;
+int[] add_line_ids;
 
 void setup(){
   surface.setResizable(true);
   size(600,400);
   frameRate(100);
   k1 = 10;
-  k2 = 1;
+  k2 = 10;
   t = 0.01;
   damping = 0.99;
   mouse_on = -1;
   KE = 0;
   first_draw = true;
   increaseMass = true;
+  add_line_ids = new int[2];
   p = new Parser("data2.csv");
-  refresh = new Button("refresh");
+  refresh = new Button("refresh",30,30);
+  addline = new Button("AddLine",30,70);
   // init nodes
   nodes = new ArrayList<Node>();
   for (int i = 0; i < p.maxid+1; i++) nodes.add(i,null);
@@ -36,8 +40,8 @@ void setup(){
   lines = new ArrayList<Line>();
   for (int i = 0; i < p.maxid+1; i++) {
     for (int j = 0; j < p.maxid+1; j++) {
-       if (p.edge_map[i][j] != 0) {
-         Line line = new Line(i, j, p.edge_map[i][j], nodes.get(i).get_Xpos(), 
+       if (p.edge_map.get(i).get(j) != 0) {
+         Line line = new Line(i, j, p.edge_map.get(i).get(j), nodes.get(i).get_Xpos(), 
                          nodes.get(i).get_Xpos(), nodes.get(j).get_Xpos(), nodes.get(j).get_Ypos());
          nodes.get(i).add_neighbor(j);
          lines.add(line);
@@ -50,6 +54,7 @@ void draw(){
   fill(100);
   rect(0,0,width,height);
   refresh.buttondraw();
+  addline.buttondraw();
   boolean hl_check = false; // hightlight check
   
   //draw lines
@@ -91,7 +96,7 @@ void draw(){
           KE += nodes.get(i).getMass()*0.5*(Math.pow(nodes.get(i).get_X_v(),2) + Math.pow(nodes.get(i).get_Y_v(),2));
       }
     } 
-    println(KE);
+    //println(KE);
   }
 }
 
@@ -111,7 +116,7 @@ public void calc_node(Node node){
   for (int i = 0; i < neighbors.size(); i++) {
     Node neighbor = nodes.get(neighbors.get(i));
     if (neighbor != null) {
-      double default_springl = p.edge_map[node.getId()][neighbors.get(i)];
+      double default_springl = p.edge_map.get(node.getId()).get(neighbors.get(i));
       double springl = Math.sqrt(Math.pow(neighbor.get_Xpos() - node.get_Xpos(), 2) + 
                       Math.pow(neighbor.get_Ypos() - node.get_Ypos(), 2)) - default_springl;
       double sforce = springl * k1;
@@ -193,6 +198,7 @@ void mouseDragged()
 }
 
 void mouseClicked(){
+  // refresh
   if (mouseX > refresh.x && mouseX < (refresh.x + refresh.wid) && mouseY > refresh.y && mouseY < (refresh.y + refresh.hgt)) {
     damping = 0.99;
     first_draw = true;
@@ -208,8 +214,8 @@ void mouseClicked(){
     lines = new ArrayList<Line>();
     for (int i = 0; i < p.maxid+1; i++) {
       for (int j = 0; j < p.maxid+1; j++) {
-         if (p.edge_map[i][j] != 0) {
-           Line line = new Line(i, j, p.edge_map[i][j], nodes.get(i).get_Xpos(), 
+         if (p.edge_map.get(i).get(j) != 0) {
+           Line line = new Line(i, j, p.edge_map.get(i).get(j), nodes.get(i).get_Xpos(), 
                          nodes.get(i).get_Xpos(), nodes.get(j).get_Xpos(), nodes.get(j).get_Ypos());
            nodes.get(i).add_neighbor(j);
            lines.add(line);
@@ -224,12 +230,14 @@ void mouseClicked(){
   }
   
   //add_node feature
-  if (mouseButton == RIGHT && mouse_on == -1 && !(mouseX > refresh.x && mouseX < (refresh.x + refresh.wid) && mouseY > refresh.y && mouseY < (refresh.y + refresh.hgt))) {
+  if (mouseButton == RIGHT && mouse_on == -1 && 
+      !(mouseX > refresh.x && mouseX < (refresh.x + refresh.wid) && mouseY > refresh.y && mouseY < (refresh.y + refresh.hgt)) &&
+      !(mouseX > addline.x && mouseX < (addline.x + addline.wid) && mouseY > addline.y && mouseY < (addline.y + addline.hgt))) {
     add_node();
   }
   
   //change_mass feature
-  if (mouse_on != -1 && mouseButton == LEFT) {
+  if (mouse_on != -1 && mouseButton == LEFT && select_node == false) {
     Node node = nodes.get(mouse_on);
     //detect to increase mass or decrease
     if (node.getMass() == 10) {
@@ -247,10 +255,34 @@ void mouseClicked(){
     }
     node.set_diameter((float)Math.sqrt(node.getMass()*200));
   }
-}
-
-void mousePressed(){
-
+  
+  //add_line
+  if (mouseX > addline.x && mouseX < (addline.x + addline.wid) && mouseY > addline.y && mouseY < (addline.y + addline.hgt)
+        && addline.label == "AddLine") {
+      select_node = true;
+      addline.label = "Adding";
+  }
+  /*else if (mouseX > addline.x && mouseX < (addline.x + addline.wid) && mouseY > addline.y && mouseY < (addline.y + addline.hgt)
+        && addline.label == "Adding") {
+      select_node = false;
+      add_line_ids[0] = 0;
+      add_line_ids[1] = 0;
+  }
+  */
+  if (mouse_on != -1 && mouseButton == LEFT && select_node == true) {
+    if (add_line_ids[0] == 0) add_line_ids[0] = mouse_on;
+    else add_line_ids[1] = mouse_on;
+    //println(add_line_ids[0]);
+    //println(add_line_ids[1]);
+    if (add_line_ids[1] != 0) {
+      Line newline = new Line(add_line_ids[0], add_line_ids[1], 100, nodes.get(add_line_ids[0]).get_Xpos(), nodes.get(add_line_ids[0]).get_Ypos(), nodes.get(add_line_ids[1]).get_Xpos(), nodes.get(add_line_ids[1]).get_Ypos());
+      lines.add(lines.size(), newline);
+      nodes.get(add_line_ids[0]).add_neighbor(add_line_ids[1]);
+      nodes.get(add_line_ids[1]).add_neighbor(add_line_ids[0]);
+      addline.label = "AddLine";
+      select_node = false;
+    }                                 
+  }
 }
 
 void delete_node(int id) {
