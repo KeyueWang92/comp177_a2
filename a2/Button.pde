@@ -10,8 +10,9 @@ class Button {
     this.y = y;
   }
   public void buttondraw(){
+    strokeWeight(1);
     fill(200,100,50);
-    rect(x,y,wid,hgt);
+    rect(x,y,wid,hgt,5);
     fill(255);
     text(label,x+5,y+20);
   }   
