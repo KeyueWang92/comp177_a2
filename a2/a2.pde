@@ -27,13 +27,13 @@ int blueBackground = 0;
 
 void setup(){
   surface.setResizable(true);
-  size(600,400);
+  size(800,600);
   frameRate(100);
-  k1 = 10;
-  k2 = 10;
+  k1 = 6;
+  k2 = 3000000;
   t = 0.01;
-  threshold = 5;
-  damping = 0.98;
+  threshold = 0;
+  damping = 0.8;
   mouse_on = -1;
   KE = 0;
   first_draw = true;
@@ -57,6 +57,7 @@ void setup(){
          Line line = new Line(i, j, p.edge_map[i][j], nodes.get(i).get_Xpos(), 
                          nodes.get(i).get_Xpos(), nodes.get(j).get_Xpos(), nodes.get(j).get_Ypos());
          nodes.get(i).add_neighbor(j);
+         nodes.get(j).add_neighbor(i);
          lines.add(line);
        }
     }
@@ -76,6 +77,7 @@ void backgroundChange(int a) {              //Randomly changes background color
 }
 
 void draw(){
+  //if(damping > 0)
   stroke(255);
   if(music_force > 3500)
     backgroundChange(100);
@@ -147,8 +149,8 @@ public void calc_node(Node node){
       float dis_square = pow((n.get_Xpos()-node.get_Xpos()),2) + 
                           pow((n.get_Ypos()-node.get_Ypos()),2);
       
-      cforce_x = (float) (cforce_x - (n.get_Xpos()-node.get_Xpos()) * k2/dis_square);
-      cforce_y = (float) (cforce_y - (n.get_Ypos()-node.get_Ypos()) * k2/dis_square);
+      cforce_x = (float) (cforce_x - (n.get_Xpos()-node.get_Xpos())/sqrt(dis_square) * k2/dis_square);
+      cforce_y = (float) (cforce_y - (n.get_Ypos()-node.get_Ypos())/sqrt(dis_square) * k2/dis_square);
     }   
   } 
   //calculate the force from springs, f = k * distance; 
@@ -175,11 +177,11 @@ public void calc_node(Node node){
       else sforce_y = sforce_y - music_force - Math.sqrt(Math.pow(distanceY, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
     }  
   }
-  float force_x = (float)(cforce_x + sforce_x);
-  float force_y = (float)(cforce_y + sforce_y);
+ float force_x = (float)(cforce_x + sforce_x);
+ float force_y = (float)(cforce_y + sforce_y);
   //calculate a
-  float a_x = force_x/node.getMass();
-  float a_y = force_y/node.getMass();
+  float a_x = force_x/node.getMass() * damping;
+  float a_y = force_y/node.getMass() * damping;
   //calculate v
   float v_x = (a_x * t + node.get_X_v()) * damping;
   float v_y = (a_y * t + node.get_Y_v()) * damping;
@@ -189,26 +191,26 @@ public void calc_node(Node node){
   float pos_y = node.get_Ypos() + 0.5 * a_y * t*t + node.get_Y_v() * t;
   node.set_y_v(v_y);
   
-  //the next part is to ensure that all nodes are always in the canvas 
-  Random rand = new Random();
+  //the next part is to ensure that all nodes are always in the canvas
   if (pos_x < node.get_diameter()/2) {
-    pos_x = node.get_diameter()+rand.nextInt(10);
-    v_x = 1;
+    pos_x = node.get_diameter()/2;
+    v_x = -v_x * damping;  
     node.set_x_v(v_x);
   }
   if (pos_y < node.get_diameter()/2) {
-    pos_y = node.get_diameter()+rand.nextInt(10);
-    v_y = 1;
+    pos_y = node.get_diameter()/2;
+    v_y = -v_y * damping;
     node.set_y_v(v_y);
   }
   if (pos_x > width-node.get_diameter()/2) {
-    pos_x = width-node.get_diameter()-rand.nextInt(10);
-    v_x = -1;
+    pos_x = width-node.get_diameter()/2;
+    v_x = -v_x * damping;  
     node.set_x_v(v_x);
   }
   if (pos_y > height - node.get_diameter()/2) {
-    pos_y = height-node.get_diameter()-rand.nextInt(10);
-    v_y = -1;
+    pos_y = height-node.get_diameter()/2;
+    //a_y = 0 - a_y;
+    v_y = -v_y * damping;
     node.set_y_v(v_y);
   }
   node.set_x_pos(pos_x);
@@ -232,7 +234,6 @@ void mouseDragged()
     node.set_x_pos(mouseX);
     node.set_y_pos(mouseY);
     //node.set_Mass(node.getMass()-1);
-    damping = 0.99;
     first_draw = true;
   }
 
@@ -241,7 +242,6 @@ void mouseDragged()
 void mouseClicked(){
   // refresh
   if (mouseX > refresh.x && mouseX < (refresh.x + refresh.wid) && mouseY > refresh.y && mouseY < (refresh.y + refresh.hgt)) {
-    damping = 0.99;
     first_draw = true;
     
     // init nodes
@@ -259,6 +259,7 @@ void mouseClicked(){
            Line line = new Line(i, j, p.edge_map[i][j], nodes.get(i).get_Xpos(), 
                          nodes.get(i).get_Xpos(), nodes.get(j).get_Xpos(), nodes.get(j).get_Ypos());
            nodes.get(i).add_neighbor(j);
+           nodes.get(j).add_neighbor(i);
            lines.add(line);
          }
       }
