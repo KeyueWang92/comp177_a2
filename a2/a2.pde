@@ -20,9 +20,9 @@ FFT fft;
 int bands = 512;
 float[] spectrum = new float[bands];
 float music_force;
-int redBackground = 100;
-int greenBackground = 100;
-int blueBackground = 100;
+int redBackground = 0;
+int greenBackground = 0;
+int blueBackground = 0;
 
 void setup(){
   surface.setResizable(true);
@@ -122,7 +122,7 @@ void draw(){
   }
 
   //update nodes' info
-  if (first_draw == true || KE > 5) {
+  if (first_draw == true || KE > 20) {
     KE = 0;
     for (int i = 0; i < nodes.size(); i++){
       first_draw = false;

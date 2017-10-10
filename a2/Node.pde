@@ -21,7 +21,7 @@ class Node {
   
   public void draw_node(boolean isHighlight){
     if (!isHighlight) {
-      fill(200);
+      fill(255);
       ellipse(x_pos, y_pos, diameter, diameter);
     }
     else {
