@@ -13,6 +13,7 @@ class Line{
   }
   
   public void draw_line(){
+    strokeWeight(1);
     line(start_x, start_y, end_x, end_y);
   }
   

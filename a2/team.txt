@@ -1,0 +1,11 @@
+﻿COMP177 a2 
+
+
+Keyue Wang & Yedi Wang
+
+
+What we did:
+* Keyue
+   * Created the structures for all the classes and implemented most of the functions.
+* Yedi
+   * Made the project way more fancier and implemented other functions.

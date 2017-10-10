@@ -1,3 +1,5 @@
+import processing.sound.*;
+
 Parser p;
 ArrayList<Node> nodes;
 ArrayList<Line> lines;
@@ -12,14 +14,24 @@ boolean first_draw;
 boolean increaseMass;
 boolean select_node;
 int[] add_line_ids;
+
+AudioIn in;
+FFT fft;
+int bands = 512;
+float[] spectrum = new float[bands];
+float music_force;
+int redBackground = 0;
+int greenBackground = 0;
+int blueBackground = 0;
+
 void setup(){
   surface.setResizable(true);
   size(600,400);
   frameRate(100);
-  k1 = 8;
-  k2 = 3;
+  k1 = 10;
+  k2 = 10;
   t = 0.01;
-  damping = 0.99;
+  damping = 0.98;
   mouse_on = -1;
   KE = 0;
   first_draw = true;
@@ -47,14 +59,39 @@ void setup(){
        }
     }
   }
+  
+  in = new AudioIn(this, 0);
+  fft = new FFT(this, bands);
+  in.start();
+  fft.input(in);
+  music_force = 0;
+}
+
+void backgroundChange(int a) {              //Randomly changes background color
+  redBackground = int(random(a));
+  greenBackground = int(random(a));
+  blueBackground = int(random(a));
 }
 
 void draw(){
-  fill(100);
+  stroke(255);
+  if(music_force > 3000)
+    backgroundChange(100);
+  fill(redBackground, greenBackground, blueBackground);
   rect(0,0,width,height);
   refresh.buttondraw();
   addline.buttondraw();
   boolean hl_check = false; // hightlight check
+  
+  fft.analyze(spectrum);
+  //float interval = width/bands;
+  music_force = 0;
+  for(int i = 0; i < bands; i++){
+    if(i > 300 && i < 400) music_force += spectrum[i]*500000;
+  // The result of the FFT is normalized
+  // draw the line for frequency band i scaling it up by 5 to get more amplitude.
+    line( i, height, i, height - spectrum[i]*height*50 );
+  }
   
   //draw lines
   for (int i = 0; i < lines.size(); i++) {
@@ -85,7 +122,7 @@ void draw(){
   }
 
   //update nodes' info
-  if (first_draw == true || KE > 5) {
+  if (first_draw == true || KE > 20) {
     KE = 0;
     for (int i = 0; i < nodes.size(); i++){
       first_draw = false;
@@ -126,11 +163,11 @@ public void calc_node(Node node){
       double distanceY = neighbor.get_Ypos() - node.get_Ypos();
     
       if ((distanceX > 0 && springl > 0) || (distanceX < 0) && (springl < 0)) 
-        sforce_x = sforce_x + Math.sqrt(Math.pow(distanceX, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
-      else sforce_x = sforce_x - Math.sqrt(Math.pow(distanceX, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
+        sforce_x = sforce_x + music_force + Math.sqrt(Math.pow(distanceX, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
+      else sforce_x = sforce_x - music_force - Math.sqrt(Math.pow(distanceX, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
       if ((distanceY > 0 && springl > 0) || (distanceY < 0) && (springl < 0)) 
-        sforce_y = sforce_y + Math.sqrt(Math.pow(distanceY, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
-      else sforce_y = sforce_y - Math.sqrt(Math.pow(distanceY, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
+        sforce_y = sforce_y + music_force + Math.sqrt(Math.pow(distanceY, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
+      else sforce_y = sforce_y - music_force - Math.sqrt(Math.pow(distanceY, 2)/(Math.pow(distanceX, 2) + Math.pow(distanceY,2)) * Math.pow(sforce,2));
     }  
   }
   float force_x = (float)(cforce_x + sforce_x);
