@@ -5,8 +5,9 @@ ArrayList<Node> nodes;
 ArrayList<Line> lines;
 float k1, k2;
 float t;
-double KE;
+float KE;
 int mouse_on;
+float threshold;
 float damping;
 Button refresh;
 Button addline;
@@ -31,6 +32,7 @@ void setup(){
   k1 = 10;
   k2 = 10;
   t = 0.01;
+  threshold = 5;
   damping = 0.98;
   mouse_on = -1;
   KE = 0;
@@ -75,7 +77,7 @@ void backgroundChange(int a) {              //Randomly changes background color
 
 void draw(){
   stroke(255);
-  if(music_force > 3000)
+  if(music_force > 3500)
     backgroundChange(100);
   fill(redBackground, greenBackground, blueBackground);
   rect(0,0,width,height);
@@ -122,7 +124,7 @@ void draw(){
   }
 
   //update nodes' info
-  if (first_draw == true || KE > 20) {
+  if (first_draw == true || KE > threshold) {
     KE = 0;
     for (int i = 0; i < nodes.size(); i++){
       first_draw = false;
@@ -132,8 +134,8 @@ void draw(){
           KE += nodes.get(i).getMass()*0.5*(Math.pow(nodes.get(i).get_X_v(),2) + Math.pow(nodes.get(i).get_Y_v(),2));
       }
     } 
-    //println(KE);
   }
+  text(Float.toString(KE), 30, 122);
 }
 
 public void calc_node(Node node){
@@ -142,8 +144,11 @@ public void calc_node(Node node){
   for (int i = 0; i < nodes.size(); i++) {
     if (nodes.get(i) != null && i != node.getId()) {
       Node n = nodes.get(i);
-      cforce_x = (float) (cforce_x - k2/(n.get_Xpos()-node.get_Xpos()));
-      cforce_y = (float) (cforce_y - k2/(n.get_Ypos()-node.get_Ypos()));
+      float dis_square = pow((n.get_Xpos()-node.get_Xpos()),2) + 
+                          pow((n.get_Ypos()-node.get_Ypos()),2);
+      
+      cforce_x = (float) (cforce_x - (n.get_Xpos()-node.get_Xpos()) * k2/dis_square);
+      cforce_y = (float) (cforce_y - (n.get_Ypos()-node.get_Ypos()) * k2/dis_square);
     }   
   } 
   //calculate the force from springs, f = k * distance; 
