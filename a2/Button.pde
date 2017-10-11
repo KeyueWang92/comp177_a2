@@ -11,7 +11,7 @@ class Button {
   }
   public void buttondraw(){
     strokeWeight(1);
-    fill(200,100,50);
+    fill(50);
     rect(x,y,wid,hgt,5);
     fill(255);
     text(label,x+5,y+20);

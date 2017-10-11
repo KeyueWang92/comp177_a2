@@ -5,8 +5,9 @@ ArrayList<Node> nodes;
 ArrayList<Line> lines;
 float k1, k2;
 float t;
-double KE;
+float KE;
 int mouse_on;
+float threshold;
 float damping;
 Button refresh;
 Button addline;
@@ -26,18 +27,19 @@ int blueBackground = 0;
 
 void setup(){
   surface.setResizable(true);
-  size(600,400);
+  size(800,600);
   frameRate(100);
-  k1 = 10;
-  k2 = 10;
+  k1 = 20;
+  k2 = 300000;
   t = 0.01;
-  damping = 0.98;
+  threshold = 3;
+  damping = 0.8;
   mouse_on = -1;
   KE = 0;
   first_draw = true;
   increaseMass = true;
   add_line_ids = new int[2];
-  p = new Parser("data2.csv");
+  p = new Parser("data1.csv");
   refresh = new Button("refresh",30,30);
   addline = new Button("AddLine",30,70);
   // init nodes
@@ -55,6 +57,7 @@ void setup(){
          Line line = new Line(i, j, p.edge_map[i][j], nodes.get(i).get_Xpos(), 
                          nodes.get(i).get_Xpos(), nodes.get(j).get_Xpos(), nodes.get(j).get_Ypos());
          nodes.get(i).add_neighbor(j);
+         nodes.get(j).add_neighbor(i);
          lines.add(line);
        }
     }
@@ -75,7 +78,7 @@ void backgroundChange(int a) {              //Randomly changes background color
 
 void draw(){
   stroke(255);
-  if(music_force > 3000)
+  if(music_force > 7000)
     backgroundChange(100);
   fill(redBackground, greenBackground, blueBackground);
   rect(0,0,width,height);
@@ -84,13 +87,12 @@ void draw(){
   boolean hl_check = false; // hightlight check
   
   fft.analyze(spectrum);
-  //float interval = width/bands;
   music_force = 0;
   for(int i = 0; i < bands; i++){
-    if(i > 300 && i < 400) music_force += spectrum[i]*500000;
+    if(i > 300 && i < 400) music_force += spectrum[i]*1000000;
   // The result of the FFT is normalized
   // draw the line for frequency band i scaling it up by 5 to get more amplitude.
-    line( i, height, i, height - spectrum[i]*height*50 );
+    line( i, height, i, height - spectrum[i]*height*30 );
   }
   
   //draw lines
@@ -122,7 +124,7 @@ void draw(){
   }
 
   //update nodes' info
-  if (first_draw == true || KE > 20) {
+  if (first_draw == true || KE > threshold) {
     KE = 0;
     for (int i = 0; i < nodes.size(); i++){
       first_draw = false;
@@ -132,8 +134,8 @@ void draw(){
           KE += nodes.get(i).getMass()*0.5*(Math.pow(nodes.get(i).get_X_v(),2) + Math.pow(nodes.get(i).get_Y_v(),2));
       }
     } 
-    //println(KE);
   }
+  text(Float.toString(KE), 30, 122);
 }
 
 public void calc_node(Node node){
@@ -142,8 +144,11 @@ public void calc_node(Node node){
   for (int i = 0; i < nodes.size(); i++) {
     if (nodes.get(i) != null && i != node.getId()) {
       Node n = nodes.get(i);
-      cforce_x = (float) (cforce_x - k2/(n.get_Xpos()-node.get_Xpos()));
-      cforce_y = (float) (cforce_y - k2/(n.get_Ypos()-node.get_Ypos()));
+      float dis_square = pow((n.get_Xpos()-node.get_Xpos()),2) + 
+                          pow((n.get_Ypos()-node.get_Ypos()),2);
+      
+      cforce_x = (float) (cforce_x - (n.get_Xpos()-node.get_Xpos())/sqrt(dis_square) * k2/dis_square);
+      cforce_y = (float) (cforce_y - (n.get_Ypos()-node.get_Ypos())/sqrt(dis_square) * k2/dis_square);
     }   
   } 
   //calculate the force from springs, f = k * distance; 
@@ -173,8 +178,8 @@ public void calc_node(Node node){
   float force_x = (float)(cforce_x + sforce_x);
   float force_y = (float)(cforce_y + sforce_y);
   //calculate a
-  float a_x = force_x/node.getMass();
-  float a_y = force_y/node.getMass();
+  float a_x = force_x/node.getMass() * damping;
+  float a_y = force_y/node.getMass() * damping;
   //calculate v
   float v_x = (a_x * t + node.get_X_v()) * damping;
   float v_y = (a_y * t + node.get_Y_v()) * damping;
@@ -184,26 +189,25 @@ public void calc_node(Node node){
   float pos_y = node.get_Ypos() + 0.5 * a_y * t*t + node.get_Y_v() * t;
   node.set_y_v(v_y);
   
-  //the next part is to ensure that all nodes are always in the canvas 
-  Random rand = new Random();
+  //the next part is to ensure that all nodes are always in the canvas
   if (pos_x < node.get_diameter()/2) {
-    pos_x = node.get_diameter()+rand.nextInt(10);
-    v_x = 1;
+    pos_x = node.get_diameter()/2;
+    v_x = -v_x * damping;  
     node.set_x_v(v_x);
   }
   if (pos_y < node.get_diameter()/2) {
-    pos_y = node.get_diameter()+rand.nextInt(10);
-    v_y = 1;
+    pos_y = node.get_diameter()/2;
+    v_y = -v_y * damping;
     node.set_y_v(v_y);
   }
   if (pos_x > width-node.get_diameter()/2) {
-    pos_x = width-node.get_diameter()-rand.nextInt(10);
-    v_x = -1;
+    pos_x = width-node.get_diameter()/2;
+    v_x = -v_x * damping;  
     node.set_x_v(v_x);
   }
   if (pos_y > height - node.get_diameter()/2) {
-    pos_y = height-node.get_diameter()-rand.nextInt(10);
-    v_y = -1;
+    pos_y = height-node.get_diameter()/2;
+    v_y = -v_y * damping;
     node.set_y_v(v_y);
   }
   node.set_x_pos(pos_x);
@@ -227,7 +231,6 @@ void mouseDragged()
     node.set_x_pos(mouseX);
     node.set_y_pos(mouseY);
     //node.set_Mass(node.getMass()-1);
-    damping = 0.99;
     first_draw = true;
   }
 
@@ -236,7 +239,6 @@ void mouseDragged()
 void mouseClicked(){
   // refresh
   if (mouseX > refresh.x && mouseX < (refresh.x + refresh.wid) && mouseY > refresh.y && mouseY < (refresh.y + refresh.hgt)) {
-    damping = 0.99;
     first_draw = true;
     
     // init nodes
@@ -254,6 +256,7 @@ void mouseClicked(){
            Line line = new Line(i, j, p.edge_map[i][j], nodes.get(i).get_Xpos(), 
                          nodes.get(i).get_Xpos(), nodes.get(j).get_Xpos(), nodes.get(j).get_Ypos());
            nodes.get(i).add_neighbor(j);
+           nodes.get(j).add_neighbor(i);
            lines.add(line);
          }
       }
@@ -299,8 +302,6 @@ void mouseClicked(){
   if (mouse_on != -1 && mouseButton == LEFT && select_node == true) {
     if (add_line_ids[0] == 0) add_line_ids[0] = mouse_on;
     else add_line_ids[1] = mouse_on;
-    //println(add_line_ids[0]);
-    //println(add_line_ids[1]);
     if (add_line_ids[1] != 0) {
       Line newline = new Line(add_line_ids[0], add_line_ids[1], 100, nodes.get(add_line_ids[0]).get_Xpos(), nodes.get(add_line_ids[0]).get_Ypos(), nodes.get(add_line_ids[1]).get_Xpos(), nodes.get(add_line_ids[1]).get_Ypos());
       lines.add(lines.size(), newline);
